@@ -1,59 +1,65 @@
 const express = require("express");
-const data = require("./MOCK_DATA.json"); // JSON file import
-
 const app = express();
 const corss = require("cors");
+const bodyparser = require("body-parser");
+const connectdata = require("./Schema/Connect");
+const Qschema = require("./Schema/Users");
 
 app.use(corss((origin = "*")));
+app.use(bodyparser.json());
 const port = 4000;
 
-app.use(express.json()); // JSON body parse करने के लिए
-
-const filePath = "./data.json";
-
 // 📌 GET - All Users
-app.get("/users", (req, res) => {
-  const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  res.json(data);
+app.get("/users", async (req, res) => {
+  const Datta = await Qschema.find();
+  res.json(Datta);
 });
 
-// 📌 POST - Add User
-app.post("/users", (req, res) => {
-  const newUser = req.body;
-  const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  data.push(newUser);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  res.json({ message: "User added successfully", data });
+// 📌 post - All Users
+
+app.post("/users", async (req, res) => {
+  const mydata = new Qschema();
+  mydata.first_name = req.body.first_name;
+  mydata.last_name = req.body.last_name;
+  mydata.email = req.body.email;
+  mydata.gender = req.body.gender;
+  mydata.ip_address = req.body.ip_address;
+
+  const datavalue = await mydata.save();
+  if (datavalue) {
+    console.log(`successfull post data for `);
+    res.status(200).json({ message: "User created successfully" }); //jab backend se msg dena ho/ya alert me dikhana ho post hone pr
+  } else {
+    console.log("cannot successfull post data");
+  }
 });
 
-// 📌 DELETE - Delete User by ID
-app.delete("/users/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  let data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  data = data.filter((user) => user.id !== id);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  res.json({ message: `User with id ${id} deleted`, data });
+// 📌 patch - All Users
+
+app.patch("/users/:id", async (req, res) => {
+  const datta = await Qschema.findByIdAndUpdate(req.params.id, req.body);
+  const updatedata = res.send(datta);
+  if (updatedata) {
+    res.status(200).json({
+      message: "succefull data edit",
+    });
+  } else {
+    res.status(404).json({ message: "User not edit" });
+  }
 });
 
-// 📌 PATCH - Update User by ID
-app.patch("/users/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const updates = req.body;
-  const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  const updatedData = data.map((user) => {
-    if (user.id === id) {
-      return { ...user, ...updates };
-    }
-    return user;
-  });
-  fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2));
-  res.json({ message: `User with id ${id} updated`, data: updatedData });
+// 📌 delete - All Users
+app.delete("/users/:id", async (req, res) => {
+  const datta = await Qschema.findByIdAndDelete(req.params.id);
+  if (datta) {
+    res.status(200).json({
+      message: "succefully delete",
+    });
+  } else {
+    res.status(404).json({ message: "User not delete" });
+  }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
-
-app.get("/", (req, res) => {
-  res.json(data);
+app.listen(port, (req, res) => {
+  console.log("website successfully run", port);
 });
