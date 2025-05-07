@@ -2,82 +2,87 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const bodyparser = require("body-parser");
-const connectdata = require("./Schema/Connect");
-const Qschema = require("./Schema/Users");
-
-app.use(cors());
-app.use(bodyparser.json());
-const port = 4000;
-
-require("dotenv").config();
 const mongoose = require("mongoose");
 
+const Qschema = require("./Schema/Users");
+
+// Middleware
+app.use(cors());
+app.use(bodyparser.json());
+
+const port = 4000;
+
+// ✅ MongoDB URI (encoded '@' as %40)
+const MONGO_URI =
+  "mongodb+srv://ashishkumawat685:Ashish%402001@cluster0.jy87iul.mongodb.net/userlive?retryWrites=true&w=majority";
+
+// ✅ Connect to MongoDB using Mongoose
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .then(() => console.log("✅ MongoDB से सफलतापूर्वक कनेक्ट हो गया"))
+  .catch((err) => console.log("❌ MongoDB कनेक्शन में त्रुटि:", err));
 
-// 📌 GET - All Users
+// ✅ GET - सभी यूज़र्स
 app.get("/users", async (req, res) => {
-  const Datta = await Qschema.find();
-  res.json(Datta);
-});
-
-// 📌 post - All Users
-
-app.post("/users", async (req, res) => {
-  const mydata = new Qschema();
-  mydata.first_name = req.body.first_name;
-  mydata.last_name = req.body.last_name;
-  mydata.email = req.body.email;
-  mydata.gender = req.body.gender;
-  mydata.ip_address = req.body.ip_address;
-
-  const datavalue = await mydata.save();
-  if (datavalue) {
-    console.log(`successfull post data for `);
-    res.status(200).json({ message: "User created successfully" }); //jab backend se msg dena ho/ya alert me dikhana ho post hone pr
-  } else {
-    console.log("cannot successfull post data");
+  try {
+    const users = await Qschema.find();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "यूज़र्स को लाने में त्रुटि", error });
   }
 });
 
-// 📌 patch - All Users
+// ✅ POST - नया यूज़र बनाना
+app.post("/users", async (req, res) => {
+  try {
+    const user = new Qschema(req.body);
+    await user.save();
+    console.log("✅ नया यूज़र सफलतापूर्वक बनाया गया");
+    res.status(200).json({ message: "User created successfully" });
+  } catch (error) {
+    console.log("❌ यूज़र को सेव करने में त्रुटि:", error);
+    res.status(500).json({ message: "User creation failed", error });
+  }
+});
 
+// ✅ PATCH - यूज़र को अपडेट करना
 app.patch("/users/:id", async (req, res) => {
   try {
-    const datta = await Qschema.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    if (datta) {
-      res.status(200).json({
-        message: "Data updated successfully",
-        data: datta,
-      });
+    const updatedUser = await Qschema.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (updatedUser) {
+      res
+        .status(200)
+        .json({ message: "User updated successfully", data: updatedUser });
     } else {
       res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    res.status(500).json({ message: "Error updating user", error });
   }
 });
 
-// 📌 delete - All Users
+// ✅ DELETE - यूज़र को हटाना
 app.delete("/users/:id", async (req, res) => {
-  const datta = await Qschema.findByIdAndDelete(req.params.id);
-  if (datta) {
-    res.status(200).json({
-      message: "succefully delete",
-    });
-  } else {
-    res.status(404).json({ message: "User not delete" });
+  try {
+    const deletedUser = await Qschema.findByIdAndDelete(req.params.id);
+    if (deletedUser) {
+      res.status(200).json({ message: "User deleted successfully" });
+    } else {
+      res.status(404).json({ message: "User not found for deletion" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting user", error });
   }
 });
 
-app.listen(port, (req, res) => {
-  console.log("website successfully run", port);
+// ✅ Server Listen
+app.listen(port, () => {
+  console.log(`🚀 Server चालू हो गया है: http://localhost:${port}`);
 });
