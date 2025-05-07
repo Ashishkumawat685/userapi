@@ -1,11 +1,11 @@
 const express = require("express");
 const app = express();
-const corss = require("cors");
+const cors = require("cors");
 const bodyparser = require("body-parser");
 const connectdata = require("./Schema/Connect");
 const Qschema = require("./Schema/Users");
 
-app.use(corss((origin = "*")));
+app.use(cors());
 app.use(bodyparser.json());
 const port = 4000;
 
@@ -37,14 +37,21 @@ app.post("/users", async (req, res) => {
 // 📌 patch - All Users
 
 app.patch("/users/:id", async (req, res) => {
-  const datta = await Qschema.findByIdAndUpdate(req.params.id, req.body);
-  const updatedata = res.send(datta);
-  if (updatedata) {
-    res.status(200).json({
-      message: "succefull data edit",
+  try {
+    const datta = await Qschema.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
     });
-  } else {
-    res.status(404).json({ message: "User not edit" });
+
+    if (datta) {
+      res.status(200).json({
+        message: "Data updated successfully",
+        data: datta,
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
   }
 });
 
