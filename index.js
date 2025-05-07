@@ -9,6 +9,9 @@ app.use(cors());
 app.use(bodyparser.json());
 const port = 4000;
 
+require("dotenv").config();
+mongoose.connect(process.env.MONGO_URI);
+
 // 📌 GET - All Users
 app.get("/users", async (req, res) => {
   const Datta = await Qschema.find();
