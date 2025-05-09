@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 mongoose
   .connect(
-    "mongodb+srv://ashishkumawat685:O1Z4yobotKhnbCUi@cluster0.jy87iul.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    "mongodb+srv://ashishkumawat685:Ashish%402001@cluster0.jy87iul.mongodb.net/userlive?retryWrites=true&w=majority",
     {
       family: 4,
       useNewUrlParser: true,

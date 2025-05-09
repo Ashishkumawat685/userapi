@@ -32,6 +32,7 @@ app.get("/users", async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "यूज़र्स को लाने में त्रुटि", error });
+    console.error("❌ यूज़र्स को लाने में Error:", error.message || error);
   }
 });
 
